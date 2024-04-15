@@ -1,0 +1,51 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
+servico = Service(ChromeDriverManager().install())
+
+navegador = webdriver.Chrome(service=servico)
+
+navegador.get("https://orteil.dashnet.org/cookieclicker/")
+
+navegador.implicitly_wait(30)
+
+lingua = navegador.find_element(By.ID, 'langSelect-EN')
+lingua.click()
+
+lista_id = []
+for _ in range (20):
+    lista_id.append(f"product{_}")
+#avalia se o produto está disponível para compra
+def produto():
+    for id in lista_id:
+        elemento = navegador.find_element(By.ID, id)
+        if elemento.get_attribute("class") == 'product unlocked enabled':
+            return True
+    return False
+
+#evita que tente comprar o primeiro upgrade, que inicialmente nao existe, o que geraria erro na execucao
+up1 = False
+
+navegador.implicitly_wait(120)
+
+coockao = navegador.find_element(By.ID, 'bigCookie')
+i = 0
+while True:
+    if i<300 :
+        coockao.click()
+        i = i + 1
+    else:
+        if up1:
+            #verifica se o primeiro upgrade esta disponivel
+            upgrade = navegador.find_element(By.ID, "upgrade0")
+            if upgrade.get_attribute('class') == 'crate upgrade enabled':
+                upgrade.click()
+        while produto():
+            for id in lista_id:
+                elemento = navegador.find_element(By.ID, id)
+                if elemento.get_attribute("class") == 'product unlocked enabled':
+                    elemento.click()
+            up1 = True
+        i = 0
